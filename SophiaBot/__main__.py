@@ -1,12 +1,11 @@
 import importlib
 import time
 import re
-import random
 from sys import argv
 from typing import Optional
 from pyrogram import filters, idle
 
-from SophiaBot import (
+from Sophia import (
     ALLOW_EXCL,
     CERT_PATH,
     DONATION_LINK,
@@ -25,10 +24,12 @@ from SophiaBot import (
     updater,
 )
 
-from SophiaBot.modules import ALL_MODULES
-from SophiaBot.modules.helper_funcs.chat_status import is_user_admin
-from SophiaBot.modules.helper_funcs.misc import paginate_modules
-from SophiaBot.modules.sudoers import bot_sys_stats
+# needed to dynamically load modules
+# NOTE: Module order is not guaranteed, specify that in the config file!
+from Sophia.modules import ALL_MODULES
+from Sophia.modules.helper_funcs.chat_status import is_user_admin
+from Sophia.modules.helper_funcs.misc import paginate_modules
+from Sophia.modules.sudoers import bot_sys_stats
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup, ParseMode, Update
 from telegram.error import (
     BadRequest,
@@ -74,42 +75,36 @@ def get_readable_time(seconds: int) -> str:
     return ping_time
 
 
-PM_START_TEXT = """Hey there 👋! My name is *Sophia*.\n\nI can help manage your groups with useful features, feel free to add me to your groups!."""
-
-STICKERS = (
-      "CAACAgUAAx0CTpRfGwACF41hMfagTfWdHNFici1VtOCQVVNYmgACgh8AAsZRxhU6tKJa_ySnnCAE",
-      "CAACAgUAAx0CTpRfGwACF5phMfi5vgKwQFg6KuzHiEc79QFT0QACCR4AAsZRxhVu32VqEb3_1SAE",
-      "CAACAgUAAx0CTpRfGwACGIBhQcGJDHuuXsU5el3I86SEx3nTpgAC2R8AAsZRxhUpEe6EcVukQCAE",
-)    
-
+PM_START_TEXT = """Hey there, my name is *Thunder GoHelp*.\n\nI can help you to manage your groups with useful features, feel free to add me to your groups!."""
 
 buttons = [
     [
-        InlineKeyboardButton(text=" Commands Help ❓", callback_data="help_back"),
+        InlineKeyboardButton(text=" Commands", callback_data="help_back"),
     ],
     [
-        InlineKeyboardButton(text="Info & About 🙋‍", callback_data="source_"),
+        InlineKeyboardButton(text="Info & About‍", callback_data="source_"),
         InlineKeyboardButton(
                   text="System Stats 💻", callback_data="stats_callback"
         ),
     ],
     [
-        InlineKeyboardButton(text=" Sophia News 🙋‍♀️ ", url=f"https://t.me/SophiaUpdates"),
-        InlineKeyboardButton(text=" Support Group 💬 ", url=f"https://t.me/SophiaSupport_Official"),
+        InlineKeyboardButton(text=" Thunder GoHelp News", url=f"https://t.me/thundergotechnology"),
+        InlineKeyboardButton(text=" Support Group 💬 ", url=f"https://t.me/thundergotechnology"),
     ],
     [
-        InlineKeyboardButton(text="➕ Add Sophia to your Group ➕", url="t.me/SophiaSLBot?startgroup=true"),   
+        InlineKeyboardButton(text="➕ Add Thunder GoHelp to your Group ➕", url="t.me/thunder_gohelp_bot?startgroup=true"),   
     ],
 ]
 
 HELP_STRINGS = """
-✘✘✘ 𝗛𝗲𝗹𝗽𝗳𝘂𝗹 𝗖𝗼𝗺𝗺𝗮𝗻𝗱𝘀 ✘✘✘
+𝐋𝐢𝐬𝐭 𝐨𝐟 𝐀𝐥𝐥 𝐂𝐨𝐦𝐦𝐚𝐧𝐝𝐬
 
-Every possibility of Sophia is documentated here
-Click buttons to get help
+Every possibility of Thunder GoHelp Commands are here
+if anything is wrong contact us via on our group
 """
 
-DONATE_STRING = """ @dihanofficial """
+DONATE_STRING = """Hey, glad to hear about your donation we don't need any kind of 
+donations we provide this bot for free."""
 
 IMPORTED = {}
 MIGRATEABLE = []
@@ -122,7 +117,7 @@ CHAT_SETTINGS = {}
 USER_SETTINGS = {}
 
 for module_name in ALL_MODULES:
-    imported_module = importlib.import_module("SophiaBot.modules." + module_name)
+    imported_module = importlib.import_module("Sophia.modules." + module_name)
     if not hasattr(imported_module, "__mod_name__"):
         imported_module.__mod_name__ = imported_module.__name__
 
@@ -211,10 +206,6 @@ def start(update: Update, context: CallbackContext):
                 IMPORTED["rules"].send_rules(update, args[0], from_pm=True)
 
         else:
-            update.effective_message.reply_sticker(
-                random.choice(STICKERS),
-                timeout=60,
-            )
             update.effective_message.reply_text(
                 PM_START_TEXT,
                 reply_markup=InlineKeyboardMarkup(buttons),
@@ -222,7 +213,12 @@ def start(update: Update, context: CallbackContext):
                 timeout=60,
             )
     else:
-        update.effective_message.reply_text("Heya, Sophia here :) PM me if you have any questions how to use me!")
+        update.effective_message.reply_text(
+            "I'm awake already!\n<b>Haven't slept since:</b> <code>{}</code>".format(
+                uptime
+            ),
+            parse_mode=ParseMode.HTML,
+        )
 
 
 def error_handler(update, context):
@@ -353,22 +349,26 @@ def sophia_about_callback(update, context):
     query = update.callback_query
     if query.data == "sophia_":
         query.message.edit_text(
-            text=""" My name is *Sophia*, I have been written with Pyrogram and Telethon.. I'm online since 10 June 2021 and is constantly updated!
-*Bot Version: 3.0*
-\n*Bot Developers:*
--  @dihanrandila
--  @InukaASiTH
-\n* Updates Channel:* @SophiaUpdates
-* Support Chat:* @SophiaSupport_Official
-                 \n\n* And finally special thanks of gratitude to all my users who relied on me for managing their groups, I hope you will always like me; My developers are constantly working to improve me!
-                 \n\n *Licensed under the GNU Affero General Public Lisence v3.0*
-                 \n© 2020 - 2021 @SophiaSLBot. All Rights Reserved """,
+            text=""" I'm *Thunder GoHelp*, a powerful group management bot built to help you manage your group easily.
+                 \n* I can restrict users.
+                 \n* I can greet users with customizable welcome messages and even set a group's rules.
+                 \n* I have an advanced anti-flood system.
+                 \n* I can warn users until they reach max warns, with each predefined actions such as ban, mute, kick, etc.
+                 \n* I have a note keeping system, blacklists, and even predetermined replies on certain keywords.
+                 \n* I check for admins' permissions before executing any command.
+
+                \n[Thunder GoTechnology]  (https://t.me/thundergotechnology)
+
+                \n[Contact Us] (https://t.me/thunderteampro) 
+
+                \nLicensed under the GNU Affero General Public Lisence v3.0. 
+                \n© 2020 - 2021 @thunderteampro. All Rights Reserved """,
             parse_mode=ParseMode.MARKDOWN,
             disable_web_page_preview=True,
             reply_markup=InlineKeyboardMarkup(
                 [
                  [
-                    InlineKeyboardButton(text="Back", callback_data="sophia_back")
+                    InlineKeyboardButton(text="Back", callback_data="sohia_back")
                  ]
                 ]
             ),
@@ -382,103 +382,6 @@ def sophia_about_callback(update, context):
                 disable_web_page_preview=False,
         )
 
-        
-
-    elif query.data == "sophia_basichelp":
-        query.message.edit_text(
-            text=f"*Here's basic Help regarding* *How to use Me?*"
-            f"\n\n• Firstly Add {dispatcher.bot.first_name} to your group by pressing [here](http://t.me/{dispatcher.bot.username}?startgroup=true)\n"
-            f"\n• After adding promote me manually with full rights for faster experience.\n"
-            f"\n• Than send `/admincache@SophiaSLBot` in that chat to refresh admin list in My database.\n"
-            f"\n\n*All done now use below given button's to know about use!*\n"
-            f"",
-            parse_mode=ParseMode.MARKDOWN,
-            disable_web_page_preview=True,
-            reply_markup=InlineKeyboardMarkup(
-                [
-                 [
-                    InlineKeyboardButton(text="Admins 👮‍♂️", callback_data="sophia_admin"),
-                    InlineKeyboardButton(text="Notes 📑", callback_data="sophia_notes"),
-                 ],
-                 [
-                    InlineKeyboardButton(text="Support 👨‍🔧", callback_data="sophia_support"),
-                    InlineKeyboardButton(text="Credits 👨‍💻", callback_data="sophia_credit"),
-                 ],
-                 [
-                    InlineKeyboardButton(text="Back", callback_data="source_"),
-                 
-                 ]
-                ]
-            ),
-        )
-
-    elif query.data == "sophia_admin":
-        query.message.edit_text(
-            text=f"*Let's make your group bit effective now*"
-            f"\nCongragulations, *Sophia* now ready to manage your group."
-            f"\n\n*Admin Tools*"
-            f"\nBasic Admin tools help you to protect and powerup your group."
-            f"\nYou can ban members, Kick members, Promote someone as admin through commands of bot."
-            f"\n\n*Welcome*"
-            f"\nLets set a welcome message to welcome new users coming to your group."
-            f"send `/setwelcome [message]` to set a welcome message!",
-            parse_mode=ParseMode.MARKDOWN,
-            disable_web_page_preview=True,
-            reply_markup=InlineKeyboardMarkup(
-                [[InlineKeyboardButton(text="Back", callback_data="sophia_basichelp")]]
-            ),
-        )
-
-    elif query.data == "sophia_notes":
-        query.message.edit_text(
-            text=f"<b> Setting up notes</b>"
-            f"\nYou can save message/media/audio or anything as notes"
-            f"\nto get a note simply use # at the beginning of a word"
-            f"\n\nYou can also set buttons for notes and filters (refer help menu)",
-            parse_mode=ParseMode.HTML,
-            reply_markup=InlineKeyboardMarkup(
-                [[InlineKeyboardButton(text="Back", callback_data="sophia_basichelp")]]
-            ),
-        )
-    elif query.data == "sophia_support":
-        query.message.edit_text(
-            text="* Sophia's Updates News & Supports*"
-            "\nJoin Support Group & Updates Channel",
-            parse_mode=ParseMode.MARKDOWN,
-            reply_markup=InlineKeyboardMarkup(
-                [
-                 [
-                    InlineKeyboardButton(text="Support Group", url="t.me/dihan_official"),
-                    InlineKeyboardButton(text="Updates Channel", url="t.me/dihanofficial"),
-                 ],
-                 [
-                    InlineKeyboardButton(text="Back", callback_data="sophia_basichelp"),
-                 
-                 ]
-                ]
-            ),
-        )
-    elif query.data == "sophia_credit":
-        query.message.edit_text(
-            text=f"*Credit For Sophia's Devs*\n"
-            f"\nHere Some Developers Helping in Making The Sophia Bot",
-            parse_mode=ParseMode.HTML,
-            reply_markup=InlineKeyboardMarkup(
-                [
-                 [
-                    InlineKeyboardButton(text="Dihan", url="t.me/dihanrandila"),
-                    InlineKeyboardButton(text="Inuka", url="t.me/InukaASiTH"),
-                 ],
-                 [
-                    InlineKeyboardButton(text="Back", callback_data="sophia_basichelp"),
-                 
-                 ]
-                ]
-            ),
-        )
-
-
- 
 @pbot.on_callback_query(filters.regex("stats_callback"))
 async def stats_callbacc(_, CallbackQuery):
     text = await bot_sys_stats()
@@ -490,22 +393,22 @@ def Source_about_callback(update, context):
     query = update.callback_query
     if query.data == "source_":
         query.message.edit_text(
-            text="""Info & About 
+            text=""" \nInfo & About \
+                 \nIn here you can find what is Thunder GoHelp and how to set me up
                  \nClick buttons for help""",
             parse_mode=ParseMode.MARKDOWN,
             disable_web_page_preview=True,
             reply_markup=InlineKeyboardMarkup(
                 [
                   [
-                    InlineKeyboardButton(text="🙋‍♀️ About Me", callback_data="sophia_"),
-                    InlineKeyboardButton(text="❓ Basic Help", callback_data="sophia_basichelp"),
+                    InlineKeyboardButton(text=" Source Code 💾", url=f"https://github.com/dihanofficial/sophia"),
                   ],
                   [
-                    InlineKeyboardButton(text=" Special Credits ❤ ", url=f"https://telegra.ph/Special-Credits-08-21"),
-                    InlineKeyboardButton(text="Terms And Conditions 📄 ", url=f"https://telegra.ph/Terms-and-Conditions-08-21"),
+                    InlineKeyboardButton(text=" Thunder GoHelp News ", url=f"https://t.me/thundergotechnology"),
+                    InlineKeyboardButton(text="Support Group", url=f"https://t.me/thundergotechnology"),
                   ],
                   [
-                    InlineKeyboardButton(text="💾 Source Code", url=f"https://github.com/dihanofficial/SophiaBot"),
+                    InlineKeyboardButton(text="Commands", callback_data="help_back"),
                  ],
                  [
                     InlineKeyboardButton(text="Go Back", callback_data="source_back")
@@ -522,9 +425,6 @@ def Source_about_callback(update, context):
                 timeout=60,
                 disable_web_page_preview=False,
         )
-
-
-# Speacial creadit for me  dont edit 
 
 @run_async
 def get_help(update: Update, context: CallbackContext):
@@ -727,7 +627,7 @@ def get_settings(update: Update, context: CallbackContext):
                     [
                         [
                             InlineKeyboardButton(
-                                text="⚙ Settings ⚙",
+                                text="Settings",
                                 url="t.me/{}?start=stngs_{}".format(
                                     context.bot.username, chat.id
                                 ),
@@ -801,10 +701,10 @@ def main():
 
     if SUPPORT_CHAT is not None and isinstance(SUPPORT_CHAT, str):
         try:
-            dispatcher.bot.sendMessage(f"@{SUPPORT_CHAT}", "I'm Online Now! 💫 ")
+            dispatcher.bot.sendMessage(f"@{SUPPORT_CHAT}", "I'm Online Now!💫 ")
         except Unauthorized:
             LOGGER.warning(
-                "Bot isnt able to send message to @SophiaSupport_Official, go and check!"
+                "Bot isnt able to send message to @thundergotechnology, go and check!"
             )
         except BadRequest as e:
             LOGGER.warning(e.message)
